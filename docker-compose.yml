@@ -1,6 +1,6 @@
 services:
   catalog-postgres:
-    image: postgres:16
+    image: postgres:14
     environment:
       POSTGRES_DB: catalog
       POSTGRES_USER: catalog
@@ -14,7 +14,7 @@ services:
       retries: 10
 
   iam-postgres:
-    image: postgres:16
+    image: postgres:14
     environment:
       POSTGRES_DB: iam
       POSTGRES_USER: iam
@@ -28,7 +28,11 @@ services:
       retries: 10
 
   borrowing-postgres:
+<<<<<<< HEAD
     image: postgres:16
+=======
+    image: postgres:14
+>>>>>>> 224a3e946a1ceac095054dc81bdf5ca9bd3e9787
     environment:
       POSTGRES_DB: borrowing
       POSTGRES_USER: borrowing
@@ -44,6 +48,8 @@ services:
   catalog:
     build:
       context: ./services/catalog
+    image: bookvault-catalog:latest
+    pull_policy: never
     environment:
       DB_HOST: catalog-postgres
       DB_PORT: 5432
@@ -59,6 +65,8 @@ services:
   iam:
     build:
       context: ./services/iam
+    image: bookvault-iam:latest
+    pull_policy: never
     environment:
       DB_HOST: iam-postgres
       DB_PORT: 5432
@@ -74,6 +82,11 @@ services:
   borrowing:
     build:
       context: ./services/borrowing
+<<<<<<< HEAD
+=======
+    image: bookvault-borrowing:latest
+    pull_policy: never
+>>>>>>> 224a3e946a1ceac095054dc81bdf5ca9bd3e9787
     environment:
       DB_HOST: borrowing-postgres
       DB_PORT: 5432
@@ -83,24 +96,108 @@ services:
     depends_on:
       borrowing-postgres:
         condition: service_healthy
+<<<<<<< HEAD
     ports:
       - "8083:8083"
 
+=======
+      catalog:
+        condition: service_started
+    ports:
+      - "8083:8083"
+
+  gateway:
+    build:
+      context: ./services/gateway
+    image: bookvault-gateway:latest
+    pull_policy: never
+    environment:
+      JWT_PUBLIC_KEY_PEM: ""
+    depends_on:
+      - catalog
+      - iam
+      - borrowing
+    ports:
+      - "8080:8080"
+
+  admin:
+    build:
+      context: ./services/admin
+    image: bookvault-admin:latest
+    pull_policy: never
+    depends_on:
+      - catalog
+      - borrowing
+    ports:
+      - "8087:8087"
+
+  zookeeper:
+    image: bitnami/zookeeper:3.9
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: bitnami/kafka:3.7
+    environment:
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,PLAINTEXT_HOST://:29092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+    depends_on:
+      - zookeeper
+    ports:
+      - "29092:29092"
+
+>>>>>>> 224a3e946a1ceac095054dc81bdf5ca9bd3e9787
   search:
     build:
       context: ./services/search
+    image: bookvault-search:latest
+    pull_policy: never
+    environment:
+      ELASTICSEARCH_URI: ${ELASTICSEARCH_URI:-http://elasticsearch:9200}
+    depends_on:
+      elasticsearch:
+        condition: service_started
+        required: false
     ports:
       - "8084:8084"
 
   notification:
     build:
       context: ./services/notification
+    image: bookvault-notification:latest
+    pull_policy: never
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+    depends_on:
+      kafka:
+        condition: service_started
+        required: false
     ports:
       - "8085:8085"
 
   media:
     build:
       context: ./services/media
+    image: bookvault-media:latest
+    pull_policy: never
+    environment:
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      MINIO_BUCKET: bookvault-media
+    depends_on:
+      minio:
+        condition: service_started
+        required: false
     ports:
       - "8086:8086"
 
@@ -141,12 +238,15 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.1
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ports:
       - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
 
   minio:
     image: minio/minio:latest
@@ -154,10 +254,19 @@ services:
       - MINIO_ROOT_USER=minioadmin
       - MINIO_ROOT_PASSWORD=minioadmin
     command: server /data --console-address :9001
+    volumes:
+      - minio_data:/data
     ports:
       - "9000:9000"
       - "9001:9001"
 
+<<<<<<< HEAD
+=======
+volumes:
+  minio_data:
+  es_data:
+
+>>>>>>> 224a3e946a1ceac095054dc81bdf5ca9bd3e9787
 networks:
   default:
     name: bookvault

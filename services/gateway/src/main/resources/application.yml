@@ -21,6 +21,36 @@ spring:
             - Path=/api/catalog/**
           filters:
             - StripPrefix=1
+        - id: borrowing
+          uri: http://borrowing:8083
+          predicates:
+            - Path=/api/borrowing/**
+          filters:
+            - StripPrefix=1
+        - id: search
+          uri: http://search:8084
+          predicates:
+            - Path=/api/search/**
+          filters:
+            - StripPrefix=1
+        - id: notification
+          uri: http://notification:8085
+          predicates:
+            - Path=/api/notification/**
+          filters:
+            - StripPrefix=1
+        - id: media
+          uri: http://media:8086
+          predicates:
+            - Path=/api/media/**
+          filters:
+            - StripPrefix=1
+        - id: admin
+          uri: http://admin:8087
+          predicates:
+            - Path=/api/admin/**
+          filters:
+            - StripPrefix=1
 
 management:
   endpoints:
