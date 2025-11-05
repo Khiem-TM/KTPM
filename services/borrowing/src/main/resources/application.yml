@@ -1,0 +1,25 @@
+server:
+  port: ${SERVER_PORT:8083}
+
+spring:
+  application:
+    name: borrowing-service
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:borrowing-postgres}:${DB_PORT:5432}/${DB_NAME:borrowing}
+    username: ${DB_USER:borrowing}
+    password: ${DB_PASSWORD:borrowing}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus

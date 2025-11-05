@@ -1,0 +1,164 @@
+version: "3.9"
+services:
+  catalog-postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: catalog
+      POSTGRES_USER: catalog
+      POSTGRES_PASSWORD: catalog
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U catalog -d catalog"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  iam-postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: iam
+      POSTGRES_USER: iam
+      POSTGRES_PASSWORD: iam
+    ports:
+      - "5434:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U iam -d iam"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  catalog:
+    build:
+      context: ./services/catalog
+    environment:
+      DB_HOST: catalog-postgres
+      DB_PORT: 5432
+      DB_NAME: catalog
+      DB_USER: catalog
+      DB_PASSWORD: catalog
+    depends_on:
+      catalog-postgres:
+        condition: service_healthy
+    ports:
+      - "8081:8081"
+
+  iam:
+    build:
+      context: ./services/iam
+    environment:
+      DB_HOST: iam-postgres
+      DB_PORT: 5432
+      DB_NAME: iam
+      DB_USER: iam
+      DB_PASSWORD: iam
+    depends_on:
+      iam-postgres:
+        condition: service_healthy
+    ports:
+      - "8082:8082"
+
+  gateway:
+    build:
+      context: ./services/gateway
+    environment:
+      JWT_PUBLIC_KEY_PEM: |
+        -----BEGIN PUBLIC KEY-----
+        ${JWT_PUBLIC_KEY_PEM_CONTENT:-}
+        -----END PUBLIC KEY-----
+    depends_on:
+      - catalog
+      - iam
+    ports:
+      - "8080:8080"
+
+  zookeeper:
+    image: bitnami/zookeeper:3.9
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: bitnami/kafka:3.7
+    environment:
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,PLAINTEXT_HOST://:29092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+    depends_on:
+      - zookeeper
+    ports:
+      - "29092:29092"
+
+networks:
+  default:
+    name: bookvault
+
+
+
+  borrowing-postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: borrowing
+      POSTGRES_USER: borrowing
+      POSTGRES_PASSWORD: borrowing
+    ports:
+      - "5435:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U borrowing -d borrowing"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  borrowing:
+    build:
+      context: ./services/borrowing
+    environment:
+      DB_HOST: borrowing-postgres
+      DB_PORT: 5432
+      DB_NAME: borrowing
+      DB_USER: borrowing
+      DB_PASSWORD: borrowing
+    depends_on:
+      borrowing-postgres:
+        condition: service_healthy
+    ports:
+      - "8083:8083"
+
+  search:
+    build:
+      context: ./services/search
+    ports:
+      - "8084:8084"
+
+  notification:
+    build:
+      context: ./services/notification
+    ports:
+      - "8085:8085"
+
+  media:
+    build:
+      context: ./services/media
+    ports:
+      - "8086:8086"
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.1
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+
+  minio:
+    image: minio/minio:latest
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    command: server /data --console-address :9001
+    ports:
+      - "9000:9000"
+      - "9001:9001"

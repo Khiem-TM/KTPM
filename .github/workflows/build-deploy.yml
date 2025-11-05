@@ -1,0 +1,117 @@
+name: Build and Deploy Microservices
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [ catalog, iam, gateway ]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build ${{ matrix.service }} service
+        working-directory: ./services/${{ matrix.service }}
+        run: mvn clean package -DskipTests
+
+      - name: Run tests
+        working-directory: ./services/${{ matrix.service }}
+        run: mvn test
+
+  build-images:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    strategy:
+      matrix:
+        service: [ catalog, iam, gateway ]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./services/${{ matrix.service }}
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}-service:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  security-scan:
+    needs: build-images
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    strategy:
+      matrix:
+        service: [ catalog, iam, gateway ]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}-service:latest
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  helm-deploy:
+    needs: security-scan
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: '3.13.0'
+
+      - name: Configure kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Deploy with Helm
+        run: |
+          helm upgrade --install catalog ./platform/helm/catalog \
+            --set image.repository=ghcr.io/${{ github.repository_owner }}/catalog-service \
+            --set image.tag=latest \
+            --namespace bookvault --create-namespace
+          
+          helm upgrade --install iam ./platform/helm/iam \
+            --set image.repository=ghcr.io/${{ github.repository_owner }}/iam-service \
+            --set image.tag=latest \
+            --namespace bookvault --create-namespace
+          
+          helm upgrade --install gateway ./platform/helm/gateway \
+            --set image.repository=ghcr.io/${{ github.repository_owner }}/gateway-service \
+            --set image.tag=latest \
+            --namespace bookvault --create-namespace
+        env:
+          KUBECONFIG: ${{ secrets.KUBECONFIG }}
+

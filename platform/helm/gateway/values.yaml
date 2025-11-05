@@ -1,0 +1,17 @@
+image:
+  repository: ghcr.io/your-org/gateway-service
+  tag: "0.0.1"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8080
+
+env:
+  JWT_PUBLIC_KEY_PEM: ""
+
+resources: {}
+
+replicaCount: 1
+
+

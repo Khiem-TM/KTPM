@@ -1,0 +1,11 @@
+image:
+  repository: ghcr.io/your-org/admin-service
+  tag: "0.0.1"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8087
+
+replicaCount: 1
+resources: {}

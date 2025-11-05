@@ -1,0 +1,35 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  application:
+    name: gateway-service
+  cloud:
+    gateway:
+      default-filters:
+        - AddRequestHeader=X-Trace-Id, ${TRACE_ID:${random.uuid}}
+      routes:
+        - id: iam
+          uri: http://iam:8082
+          predicates:
+            - Path=/api/iam/**
+          filters:
+            - StripPrefix=1
+        - id: catalog
+          uri: http://catalog:8081
+          predicates:
+            - Path=/api/catalog/**
+          filters:
+            - StripPrefix=1
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+
+security:
+  jwt:
+    publicKeyPem: ${JWT_PUBLIC_KEY_PEM:}
+
+

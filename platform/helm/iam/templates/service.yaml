@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: iam
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    app: iam
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: 8082
+      name: http
+
+

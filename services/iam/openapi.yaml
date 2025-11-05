@@ -1,0 +1,27 @@
+openapi: 3.0.3
+info:
+  title: IAM Service API
+  version: 1.0.0
+servers:
+  - url: /api/iam
+paths:
+  /v1/auth/register:
+    post:
+      summary: Register new user
+      responses:
+        '201':
+          description: Created
+  /v1/auth/login:
+    post:
+      summary: Login
+      responses:
+        '200':
+          description: OK
+  /v1/auth/public-key:
+    get:
+      summary: Get RSA public key (PEM)
+      responses:
+        '200':
+          description: OK
+
+

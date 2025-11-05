@@ -1,0 +1,11 @@
+image:
+  repository: ghcr.io/your-org/media-service
+  tag: "0.0.1"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8086
+
+replicaCount: 1
+resources: {}

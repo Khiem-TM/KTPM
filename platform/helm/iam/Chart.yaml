@@ -1,0 +1,8 @@
+apiVersion: v2
+name: iam
+description: IAM Service Helm Chart
+type: application
+version: 0.1.0
+appVersion: "0.0.1"
+
+

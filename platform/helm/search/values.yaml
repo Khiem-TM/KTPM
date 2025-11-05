@@ -1,0 +1,11 @@
+image:
+  repository: ghcr.io/your-org/search-service
+  tag: "0.0.1"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8084
+
+replicaCount: 1
+resources: {}
