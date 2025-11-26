@@ -1,9 +1,9 @@
-import axios from 'axios';
+import http from './http';
 import { API } from '../config/api';
 
 const authService = {
   login: async (username, password) => {
-    const response = await axios.post(`${API.IAM}/auth/login`, {
+    const response = await http.post(`${API.IAM}/auth/login`, {
       username,
       password
     });
@@ -14,7 +14,7 @@ const authService = {
   },
 
   register: async (username, email, password) => {
-    const response = await axios.post(`${API.IAM}/auth/register`, {
+    const response = await http.post(`${API.IAM}/auth/register`, {
       username,
       email,
       password
@@ -39,4 +39,3 @@ const authService = {
 };
 
 export default authService;
-

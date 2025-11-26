@@ -6,6 +6,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 
 @RestController
 @RequestMapping("/api/catalog/v1/books")
@@ -18,6 +20,12 @@ public class BookController {
 
     @GetMapping
     public List<Book> list() { return bookService.list(); }
+
+    @GetMapping("/paged")
+    public Page<Book> listPaged(@RequestParam(defaultValue = "0") int page,
+                                @RequestParam(defaultValue = "10") int size) {
+        return bookService.listPaged(PageRequest.of(page, size));
+    }
 
     @GetMapping("/{id}")
     public Book get(@PathVariable Long id) { return bookService.get(id); }

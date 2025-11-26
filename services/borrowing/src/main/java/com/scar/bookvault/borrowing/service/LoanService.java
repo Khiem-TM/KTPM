@@ -16,6 +16,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 public class LoanService {
@@ -118,6 +120,7 @@ public class LoanService {
     public Optional<Integer> getBorrowedBookCount(Long bookId) {
         return loanRepository.countBorrowedBooksByBookId(bookId);
     }
+    public Page<Loan> listPaged(Pageable pageable) { return loanRepository.findAll(pageable); }
     
     // Private methods
     

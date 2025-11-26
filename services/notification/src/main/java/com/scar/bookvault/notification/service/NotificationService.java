@@ -1,19 +1,24 @@
 package com.scar.bookvault.notification.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
+import java.time.OffsetDateTime;
+import java.util.HashMap;
 import java.util.Map;
 
 @Service
 public class NotificationService {
     private final EmailService emailService;
     private final ObjectMapper objectMapper;
+    private final MongoTemplate mongoTemplate;
 
-    public NotificationService(EmailService emailService, ObjectMapper objectMapper) {
+    public NotificationService(EmailService emailService, ObjectMapper objectMapper, MongoTemplate mongoTemplate) {
         this.emailService = emailService;
         this.objectMapper = objectMapper;
+        this.mongoTemplate = mongoTemplate;
     }
 
     @KafkaListener(topics = "loan.created", groupId = "notification-service")
@@ -37,6 +42,13 @@ public class NotificationService {
             );
             
             emailService.sendEmail(email, subject, body);
+            Map<String, Object> doc = new HashMap<>();
+            doc.put("type", "LOAN_CREATED");
+            doc.put("email", email);
+            doc.put("subject", subject);
+            doc.put("body", body);
+            doc.put("createdAt", OffsetDateTime.now().toString());
+            mongoTemplate.save(doc, "notifications");
         } catch (Exception e) {
             System.err.println("Error processing loan.created event: " + e.getMessage());
         }
@@ -63,6 +75,13 @@ public class NotificationService {
             );
             
             emailService.sendEmail(email, subject, body);
+            Map<String, Object> doc = new HashMap<>();
+            doc.put("type", "LOAN_OVERDUE");
+            doc.put("email", email);
+            doc.put("subject", subject);
+            doc.put("body", body);
+            doc.put("createdAt", OffsetDateTime.now().toString());
+            mongoTemplate.save(doc, "notifications");
         } catch (Exception e) {
             System.err.println("Error processing loan.overdue event: " + e.getMessage());
         }
@@ -88,6 +107,13 @@ public class NotificationService {
             );
             
             emailService.sendEmail(email, subject, body);
+            Map<String, Object> doc = new HashMap<>();
+            doc.put("type", "LOAN_RETURNED");
+            doc.put("email", email);
+            doc.put("subject", subject);
+            doc.put("body", body);
+            doc.put("createdAt", OffsetDateTime.now().toString());
+            mongoTemplate.save(doc, "notifications");
         } catch (Exception e) {
             System.err.println("Error processing loan.returned event: " + e.getMessage());
         }
@@ -116,6 +142,13 @@ public class NotificationService {
             );
             
             emailService.sendEmail(email, subject, body);
+            Map<String, Object> doc = new HashMap<>();
+            doc.put("type", "LOAN_DUE_REMINDER");
+            doc.put("email", email);
+            doc.put("subject", subject);
+            doc.put("body", body);
+            doc.put("createdAt", OffsetDateTime.now().toString());
+            mongoTemplate.save(doc, "notifications");
         } catch (Exception e) {
             System.err.println("Error processing loan.due.reminder event: " + e.getMessage());
         }
@@ -123,5 +156,12 @@ public class NotificationService {
 
     public void sendEmailNotification(String to, String subject, String body) {
         emailService.sendEmail(to, subject, body);
+        Map<String, Object> doc = new HashMap<>();
+        doc.put("type", "EMAIL");
+        doc.put("email", to);
+        doc.put("subject", subject);
+        doc.put("body", body);
+        doc.put("createdAt", OffsetDateTime.now().toString());
+        mongoTemplate.save(doc, "notifications");
     }
 }

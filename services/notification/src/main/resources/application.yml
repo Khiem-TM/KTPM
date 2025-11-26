@@ -4,6 +4,9 @@ server:
 spring:
   application:
     name: notification-service
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://mongodb:27017/bookvault}
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}

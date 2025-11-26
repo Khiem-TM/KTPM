@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 export const API = {
   BASE_URL: API_BASE_URL,
@@ -8,4 +8,3 @@ export const API = {
   SEARCH: `${API_BASE_URL}/api/search/v1`,
   ADMIN: `${API_BASE_URL}/api/admin/v1`,
 };
-

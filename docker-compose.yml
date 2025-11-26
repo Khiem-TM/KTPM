@@ -182,6 +182,13 @@ services:
     ports:
       - "8085:8085"
 
+  mongodb:
+    image: mongo:6
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
   media:
     build:
       context: ./services/media
@@ -224,6 +231,7 @@ services:
 volumes:
   minio_data:
   es_data:
+  mongo_data:
 
 networks:
   default:

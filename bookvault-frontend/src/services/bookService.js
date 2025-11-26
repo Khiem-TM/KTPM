@@ -1,4 +1,4 @@
-import axios from 'axios';
+import http from './http';
 import { API } from '../config/api';
 
 const getAuthHeaders = () => {
@@ -8,21 +8,21 @@ const getAuthHeaders = () => {
 
 const bookService = {
   getBooks: async () => {
-    const response = await axios.get(`${API.CATALOG}/books`, {
+    const response = await http.get(`${API.CATALOG}/books`, {
       headers: getAuthHeaders()
     });
     return response.data;
   },
 
   getBook: async (id) => {
-    const response = await axios.get(`${API.CATALOG}/books/${id}`, {
+    const response = await http.get(`${API.CATALOG}/books/${id}`, {
       headers: getAuthHeaders()
     });
     return response.data;
   },
 
   createBook: async (book) => {
-    const response = await axios.post(`${API.CATALOG}/books`, book, {
+    const response = await http.post(`${API.CATALOG}/books`, book, {
       headers: {
         ...getAuthHeaders(),
         'Content-Type': 'application/json'
@@ -32,7 +32,7 @@ const bookService = {
   },
 
   updateBook: async (id, book) => {
-    const response = await axios.put(`${API.CATALOG}/books/${id}`, book, {
+    const response = await http.put(`${API.CATALOG}/books/${id}`, book, {
       headers: {
         ...getAuthHeaders(),
         'Content-Type': 'application/json'
@@ -42,11 +42,10 @@ const bookService = {
   },
 
   deleteBook: async (id) => {
-    await axios.delete(`${API.CATALOG}/books/${id}`, {
+    await http.delete(`${API.CATALOG}/books/${id}`, {
       headers: getAuthHeaders()
     });
   }
 };
 
 export default bookService;
-

@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import java.util.Map;
 
 @RestController
@@ -103,5 +105,12 @@ public class LoanController {
         );
         
         return ResponseEntity.ok(stats);
+    }
+
+    @GetMapping("/loans")
+    public ResponseEntity<Page<Loan>> listPaged(@RequestParam(defaultValue = "0") int page,
+                                                @RequestParam(defaultValue = "10") int size) {
+        Page<Loan> loans = loanService.listPaged(PageRequest.of(page, size));
+        return ResponseEntity.ok(loans);
     }
 }
